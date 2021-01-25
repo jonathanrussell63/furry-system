@@ -1,0 +1,44 @@
+#This is some pseudo code, idk what it is saying in some places so i cant convert
+Function USPrice(Asset As Double, Volatility _
+					As Double, IntRate As _
+					Double, Strike As _
+					Double, Expiry As _
+					Double, NoSteps _
+					As Integer)
+
+ReDim S(0 To NoSteps, 0 To NoSteps)
+ReDim V(0 To NoSteps, 0 To NoSteps)
+
+time step = Expiry / NoSteps
+
+DiscountFactor = Exp(-IntRate * time step)
+
+temp1 = Exp((IntRate + Volatility * Volatility) * time step)
+temp2 = 0.5 * (DiscountFactor + temp1)
+
+u = temp2 + Sqr(temp2 * temp2 - 1)
+d=1/u
+
+p = (Exp(IntRate * time step) - d) / (u - d)
+
+S(0, 0) = Asset
+
+For n = 1 To NoSteps
+	For j = n To 1 Step -1
+		S(j, n) = u * S(j - 1, n - 1)
+	Next j
+	Step(0, n)=d* S(0, n - 1)
+	Next n
+
+For j = 0 To NoSteps
+	V(j, NoSteps) = Payoff(S(j, NoSteps), Strike)
+Next j
+For n = NoSteps To 1 Step -1
+	For j = 0 To NoSteps - 1
+		V(j, n - 1) = max((p * V(j + 1, n) + (1 - p) * V(j, n)) _
+			* DiscountFactor, Payoff(S(j, n - 1), Strike))
+	Next j
+Next n
+
+USPrice = V(0, 0)
+End Function
